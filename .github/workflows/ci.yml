@@ -15,8 +15,8 @@ jobs:
           python-version: "3.12"
       - name: Install suite packages from source
         run: |
-          pip install "git+https://github.com/cognis-digital/sentinel-policy"
-          pip install "git+https://github.com/cognis-digital/agentledger#egg=agentledger[ed25519]"
-          pip install "git+https://github.com/cognis-digital/repo-warden"
+          pip install "sentinel-policy @ git+https://github.com/cognis-digital/sentinel-policy"
+          pip install "agentledger[ed25519] @ git+https://github.com/cognis-digital/agentledger"
+          pip install "repo-warden @ git+https://github.com/cognis-digital/repo-warden"
       - name: Run end-to-end integration
         run: python examples/integration.py
