@@ -1,30 +1,45 @@
 # Accountable AI Engineering
 
-**An open suite for running AI agents you can *prove* are under control — on infrastructure you own, with code that never leaves it.**
-
-The hard problem in production AI isn't whether the model is clever. It's the questions a board, a regulator, or an insurer asks afterward:
-
-> **What did the agent do? Under whose authority? Can you prove it — offline, months later?**
->
-> And: **can your agents understand your codebase without shipping it to someone else's cloud to be retained or trained on?**
-
-Most stacks can't answer these. This suite is five small, focused, dependency-light tools that can — each useful alone, stronger together, all Apache-2.0, all on-prem by construction.
+**The open suite for teams who have to *prove* their AI agents are under control — on infrastructure they own, with code that never leaves it.**
 
 ---
 
-## The suite
+Answer honestly:
 
-| Tool | What it does | One-line pitch |
-|------|--------------|----------------|
-| [**codegraph-mcp**](https://github.com/cognis-digital/codegraph-mcp) | No-train code knowledge graph served to agents over MCP | Give agents real, structural code understanding — **6 languages, cross-language**, with an audit row for every read. Overlays the repos you already host. |
-| [**agentledger**](https://github.com/cognis-digital/agentledger) | Signed, hash-chained flight recorder for agent directives | Prove who authorized every action. **Ed25519 · post-quantum ML-DSA · hybrid**, with key rotation continuity proofs and offline-verifiable evidence. |
-| [**sentinel-policy**](https://github.com/cognis-digital/sentinel-policy) | Open governance doctrine + policy-gate engine | The **SENTINEL seven rules** plus a data-only policy engine that decides allow / deny / require-approval, each decision citing the rule. |
+- Do your AI agents need to read and reason over **proprietary code that legally cannot be sent to someone else's cloud**?
+- When an agent takes an action, can you say **who authorized it** — and prove it to an auditor **months later, offline**?
+- Would your compliance team rather have **a signed, tamper-evident record** than a screenshot and a shrug?
+- Do you want governance that's a **rule you can enforce**, not a slogan in a marketing deck?
+
+If you nodded at even one of those, you're exactly who this is built for — and you can be running the relevant piece in about five minutes.
+
+## Start where it hurts
+
+Each tool stands on its own. Pick the pain you have today and go straight to it:
+
+| Your problem right now | Reach for | 
+|---|---|
+| "Agents need to understand our codebase, but it can't leave the building." | → **[codegraph-mcp](https://github.com/cognis-digital/codegraph-mcp)** |
+| "We can't prove who authorized an agent's action." | → **[agentledger](https://github.com/cognis-digital/agentledger)** |
+| "'Responsible AI' is a slogan here, not something we can enforce." | → **[sentinel-policy](https://github.com/cognis-digital/sentinel-policy)** |
+| "Agents and humans push to the same repos with no guardrails." | → **[repo-warden](https://github.com/cognis-digital/repo-warden)** |
+| "Our agent's reasoning loop is a `while` nobody can inspect." | → **[cyclework](https://github.com/cognis-digital/cyclework)** |
+
+Each is `pip install` away, Apache-2.0, dependency-light, and runs on hardware you control. Solve one problem today; the pieces are built to snap together when you're ready for the rest.
+
+## What you get
+
+| Tool | What it does | Why it wins |
+|------|--------------|-------------|
+| [**codegraph-mcp**](https://github.com/cognis-digital/codegraph-mcp) | No-train code knowledge graph served to agents over MCP | Real structural code understanding — **6 languages, cross-language** — with an audit row for every read. Overlays the repos you already host; nothing is trained on. |
+| [**agentledger**](https://github.com/cognis-digital/agentledger) | Signed, hash-chained flight recorder for agent directives | Prove who authorized every action. **Ed25519 · post-quantum ML-DSA · hybrid**, key-rotation continuity proofs, evidence bundles a regulator verifies offline. |
+| [**sentinel-policy**](https://github.com/cognis-digital/sentinel-policy) | Open governance doctrine + policy-gate engine | The **SENTINEL seven rules** plus a data-only engine that returns allow / deny / require-approval, each decision citing the rule it serves. |
 | [**repo-warden**](https://github.com/cognis-digital/repo-warden) | Git access governance over existing remotes | RFC 8628 device-flow auth, scoped revocable tokens, branch protection as a drop-in `pre-receive` hook. No forge migration. |
-| [**cyclework**](https://github.com/cognis-digital/cyclework) | Iterative refinement engine | The propose → check → revise control loop as a first-class, inspectable object — for solvers, optimizers, and self-correcting agent loops. |
+| [**cyclework**](https://github.com/cognis-digital/cyclework) | Iterative refinement engine | The propose → check → revise loop as a first-class, inspectable object — for solvers, optimizers, and self-correcting agent loops. |
 
-## How they compose
+## How the pieces compose
 
-The four governance tools form one accountable path from an operator's intent to an agent's action against your code — and a tamper-evident record of all of it:
+Together they form one accountable path from an operator's intent to an agent's action against your code — and a tamper-evident record of all of it:
 
 ```mermaid
 flowchart LR
@@ -36,30 +51,11 @@ flowchart LR
     AL -->|offline-verifiable| EV([Evidence bundle\nfor a regulator])
 ```
 
-1. **sentinel-policy** decides whether a directive is permitted, and under which rule.
-2. **agentledger** signs and chains that decision — including denials — into a tamper-evident ledger.
-3. **repo-warden** scopes what the agent may actually do to your git repos.
-4. **codegraph-mcp** gives the agent structural understanding of the code, logging every read.
-5. At any point you export an **evidence bundle** a third party can verify with no access to your systems.
-
-They're designed to snap together — e.g. a `sentinel-policy` decision drops straight into `agentledger`'s policy gate:
-
-```python
-from agentledger import Recorder, PolicyGate
-from sentinel_policy import load_policy
-
-policy = load_policy("policies/prod-controls.json")
-gate = PolicyGate(default_allow=False).use(policy.as_gate_evaluator(defer_on_default=False))
-rec = Recorder(gate=gate)                       # decisions are now signed + chained
-
-decision, entry = rec.submit("alice", "deploy", {"env": "prod"})
-```
-
-See [`examples/integration.py`](examples/integration.py) for an end-to-end wiring.
+A policy *decides*, the ledger *proves*, the warden *scopes*, the graph *informs* — and at any moment you export evidence a third party can verify with no access to your systems. Want to see it run end to end? It's one file: **[`examples/integration.py`](examples/integration.py)** (and our CI installs all three governance packages from source and runs it on every commit, so "they compose" is verified, not claimed).
 
 ## How it compares
 
-The cloud code assistants are powerful but require sending your code to their infrastructure. The self-hosted alternatives make you migrate your hosting and leave the audit/PQC story on a roadmap. This suite is built for the regulated and high-stakes case — defense, finance, healthcare, gov — where neither is acceptable.
+Built for the regulated, high-stakes case — defense, finance, healthcare, government — where the cloud assistants aren't allowed and the self-hosted forges leave the audit story on a roadmap.
 
 | | Cloud assistants | Self-hosted forge | **This suite** |
 |---|---|---|---|
@@ -73,27 +69,21 @@ The cloud code assistants are powerful but require sending your code to their in
 | Published, reproducible benchmark | — | none | **yes** |
 | Runs air-gapped | no | heavy | **standard library + SQLite** |
 
-## Why it's different
+## Why teams choose it
 
 - **No training, ever.** Nothing here ingests your code to rank, sell, or train a model.
 - **Overlay, not migration.** Point the tools at the repos and remotes you already run.
 - **Provable, offline.** Hash-chained ledgers, cryptographic signatures, and evidence bundles a regulator can verify with no call back to any vendor.
-- **Boring on purpose.** Small, readable, dependency-light Python + SQLite. Easy to vet, easy to run in a restricted network.
+- **Boring on purpose.** Small, readable, dependency-light Python + SQLite — easy to vet, easy to run in a restricted network.
 
 ## Get started
 
-Each tool installs and runs on its own:
-
 ```bash
-pip install -e .   # in any of the repos below
+pip install -e .   # inside any of the five repos
 ```
 
-- codegraph-mcp → https://github.com/cognis-digital/codegraph-mcp
-- agentledger → https://github.com/cognis-digital/agentledger
-- sentinel-policy → https://github.com/cognis-digital/sentinel-policy
-- repo-warden → https://github.com/cognis-digital/repo-warden
-- cyclework → https://github.com/cognis-digital/cyclework
+Pick your entry point from **[Start where it hurts](#start-where-it-hurts)** and follow it into the repo. Each one ships with a runnable demo and a green test suite.
 
 ## License
 
-Apache-2.0. © Cognis Digital. Every tool in the suite is Apache-2.0 — including the SENTINEL governance doctrine, published openly so you can argue with the rules on their merits.
+Apache-2.0. © Cognis Digital. Every tool — including the SENTINEL governance doctrine — is published openly, so you can argue with the rules on their merits before you ever adopt them.
