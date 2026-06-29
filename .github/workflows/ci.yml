@@ -18,5 +18,11 @@ jobs:
           pip install "sentinel-policy @ git+https://github.com/cognis-digital/sentinel-policy"
           pip install "agentledger[ed25519] @ git+https://github.com/cognis-digital/agentledger"
           pip install "repo-warden @ git+https://github.com/cognis-digital/repo-warden"
+          pip install "cyclework @ git+https://github.com/cognis-digital/cyclework"
+          pip install pytest
       - name: Run end-to-end integration
         run: python examples/integration.py
+      - name: Run demos
+        run: python demos/run_all.py
+      - name: Run tests
+        run: python -m pytest -q

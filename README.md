@@ -25,7 +25,7 @@ Each tool stands on its own. Pick the pain you have today and go straight to it:
 | "Agents and humans push to the same repos with no guardrails." | → **[repo-warden](https://github.com/cognis-digital/repo-warden)** |
 | "Our agent's reasoning loop is a `while` nobody can inspect." | → **[cyclework](https://github.com/cognis-digital/cyclework)** |
 
-Each is `pip install` away, Apache-2.0, dependency-light, and runs on hardware you control. Solve one problem today; the pieces are built to snap together when you're ready for the rest.
+Each is `pip install` away, COCL (Cognis Open Collaboration License), dependency-light, and runs on hardware you control. Solve one problem today; the pieces are built to snap together when you're ready for the rest.
 
 ## What you get
 
@@ -52,6 +52,25 @@ flowchart LR
 ```
 
 A policy *decides*, the ledger *proves*, the warden *scopes*, the graph *informs* — and at any moment you export evidence a third party can verify with no access to your systems. Want to see it run end to end? It's one file: **[`examples/integration.py`](examples/integration.py)** (and our CI installs all three governance packages from source and runs it on every commit, so "they compose" is verified, not claimed).
+
+## Demos
+
+Five runnable, fully offline scenarios in **[`demos/`](demos/)**, each aimed at a different audience and exercising the **real APIs** of the suite tools. Each resolves the packages from your environment or from sibling source checkouts, skips any tool it can't find rather than crashing, and exits `0`. See **[docs/DEMOS.md](docs/DEMOS.md)** for the full write-up and the SENTINEL rules each one leans on.
+
+```bash
+python demos/run_all.py                       # all five, end to end
+python demos/01_end_to_end_accountability.py  # or just one  (PYTHONUTF8=1 on Windows)
+```
+
+| # | Scenario | Audience | What it shows |
+|---|----------|----------|---------------|
+| 1 | [End-to-end accountability](demos/01_end_to_end_accountability.py) | CTOs / eng leaders | directive → policy decides → ledger proves → warden scopes → offline-verifiable evidence bundle |
+| 2 | [Tamper-evidence & refusal](demos/02_tamper_evidence_and_refusal.py) | Security | hash-chain catches a DB edit (S4); denied actions leave a recorded refusal (S7); tokens are namespace-bound and revoked instantly (S2) |
+| 3 | [Compliance evidence](demos/03_compliance_evidence.py) | Compliance / audit | m-of-n approvals clear a gated action (S3); key rotation with continuity proof; one file an auditor verifies offline |
+| 4 | [Governed git access](demos/04_governed_git_access.py) | Platform engineering | RFC 8628 device-flow grant, then branch-protection enforcement on the scoped token |
+| 5 | [Inspectable agent loop](demos/05_inspectable_agent_loop.py) | AI agent builders | a cyclework refine loop with a full trace + a grounded, audited codegraph read |
+
+For how the components fit together, see **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 ## How it compares
 
@@ -86,4 +105,4 @@ Pick your entry point from **[Start where it hurts](#start-where-it-hurts)** and
 
 ## License
 
-Apache-2.0. © Cognis Digital. Every tool — including the SENTINEL governance doctrine — is published openly, so you can argue with the rules on their merits before you ever adopt them.
+COCL (Cognis Open Collaboration License). © Cognis Digital. Every tool — including the SENTINEL governance doctrine — is published openly, so you can argue with the rules on their merits before you ever adopt them.
