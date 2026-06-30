@@ -13,6 +13,15 @@ Answer honestly:
 
 If you nodded at even one of those, you're exactly who this is built for — and you can be running the relevant piece in about five minutes.
 
+
+## Watch the walkthrough
+
+A full narrated tour — setup, the tool in action, and every demo scenario:
+
+[![Watch the accountable-ai-suite walkthrough](media/walkthrough-thumb.png)](https://github.com/cognis-digital/accountable-ai-suite/releases/download/walkthrough-v1/walkthrough.mp4)
+
+▶ **[Watch the walkthrough (MP4)](https://github.com/cognis-digital/accountable-ai-suite/releases/download/walkthrough-v1/walkthrough.mp4)**
+
 ## Start where it hurts
 
 Each tool stands on its own. Pick the pain you have today and go straight to it:

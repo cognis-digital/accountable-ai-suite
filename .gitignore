@@ -7,3 +7,5 @@ venv/
 *.db
 *.json
 !examples/*.json
+
+media/walkthrough.mp4
