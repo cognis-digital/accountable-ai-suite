@@ -1,14 +1,18 @@
 # Demos
 
-Five runnable scenarios in [`../demos/`](../demos/), each aimed at a different
+Eight runnable scenarios in [`../demos/`](../demos/), each aimed at a different
 audience, each exercising the **real APIs** of the suite tools. They run fully
 offline. Each scenario resolves the suite packages on its own — from whatever is
 installed (what CI does) or from sibling source checkouts next to this repo
 (`../agentledger`, `../sentinel-policy`, …) — and any tool that can't be
 resolved is skipped with a note rather than crashing. Every scenario exits `0`.
 
+Scenarios 1–5 show the tools composing by hand; **scenarios 6–8 exercise the
+[capstone layer](CAPSTONE.md)** — the orchestrator, the unified report, and the
+one-shot integrity verify.
+
 ```bash
-python demos/run_all.py                       # all five, end to end
+python demos/run_all.py                       # all eight, end to end
 python demos/01_end_to_end_accountability.py  # or just one
 ```
 
@@ -21,6 +25,9 @@ python demos/01_end_to_end_accountability.py  # or just one
 | 3 | [Compliance evidence](../demos/03_compliance_evidence.py) | Compliance / audit | m-of-n independent approvals clear a gated high-risk action (S3); a key rotation keeps a continuity proof; the whole record exports as one file a regulator verifies offline. | sentinel-policy, agentledger |
 | 4 | [Governed git access](../demos/04_governed_git_access.py) | Platform engineering | RFC 8628 device-flow grant for a headless agent, then the same scoped token enforced against a branch-protection policy (protected branch, force-push, namespace). | repo-warden |
 | 5 | [Inspectable agent loop](../demos/05_inspectable_agent_loop.py) | AI agent builders | A cyclework refine loop runs to convergence with a full trace; codegraph-mcp grounds an edit with a structural, audited read of code it never trained on. | cyclework, codegraph-mcp |
+| 6 | [Orchestrated path](../demos/06_orchestrated_path.py) | Platform / AppSec | The whole accountable path — policy → signed ledger → scoped git op → grounded read — collapsed into a single `Orchestrator.act()` call, proved with one offline-verifiable bundle. | capstone + all five |
+| 7 | [Unified compliance report](../demos/07_unified_compliance_report.py) | Compliance / audit | `build_report` aggregates all five tools into one document + a maturity scorecard, rendered as Markdown / HTML / SARIF (gaps and denials become code-scanning findings). | capstone + all five |
+| 8 | [Suite verify integrity](../demos/08_suite_verify_integrity.py) | Auditor / IR | `verify_all` returns one integrity verdict across the evidence bundle, warden audit, and graph audit; the offline bundle check catches a tamper and *locates* the broken record. | capstone + agentledger, repo-warden |
 
 ## The SENTINEL rules the demos lean on
 
@@ -29,8 +36,8 @@ python demos/01_end_to_end_accountability.py  # or just one
 | S2 | Least Authority | 1, 2 |
 | S3 | Gated Escalation | 1, 3 |
 | S4 | Immutable Record | 2 |
-| S6 | Boundary Integrity | 2 |
-| S7 | Provable Refusal | 2 |
+| S6 | Boundary Integrity | 2, 6, 7 |
+| S7 | Provable Refusal | 2, 6, 7 |
 
 ---
 

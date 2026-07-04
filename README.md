@@ -62,12 +62,38 @@ flowchart LR
 
 A policy *decides*, the ledger *proves*, the warden *scopes*, the graph *informs* — and at any moment you export evidence a third party can verify with no access to your systems. Want to see it run end to end? It's one file: **[`examples/integration.py`](examples/integration.py)** (and our CI installs all three governance packages from source and runs it on every commit, so "they compose" is verified, not claimed).
 
+## The capstone: the whole path in one call
+
+Composing five tools by hand is a great way to *understand* the path — but in production you want one seam, not five. The **[`accountable_suite`](accountable_suite/)** package (stdlib-only, `pip install -e .`) is the umbrella made executable:
+
+```python
+from accountable_suite import Orchestrator, build_report, verify_all
+
+orch = Orchestrator(policy=my_policy, warden_store=ws)   # + optional code graph
+outcome = orch.act(actor="agent:dev", action="push",
+                   params={"repo": "acme/api", "branch": "feature/x"}, token=token)
+#   policy decides -> ledger signs & chains -> warden scopes -> (graph grounds)
+
+rpt = build_report(policy=my_policy, recorder=orch.recorder, warden_audit=audit)
+open("report.html", "w").write(rpt.to_html())     # Markdown / HTML / SARIF / JSON
+assert verify_all(recorder=orch.recorder, warden_audit=audit).ok   # one verdict
+```
+
+It adds four things that only make sense across all five tools at once:
+
+- **`Orchestrator.act()`** — decide → sign → scope → ground, in a single call, with a typed `Outcome` and an offline-verifiable evidence bundle.
+- **`build_report`** — one **compliance report** (Markdown / HTML / **SARIF** / JSON) aggregating every tool; doctrine gaps and denied authorizations become code-scanning findings.
+- **`verify_all`** — one **integrity verdict** across the evidence bundle, the warden audit, and the graph audit (the bundle check is pure-Python and works offline).
+- **`build_scorecard`** — a **governance maturity scorecard** (five SENTINEL-aligned dimensions, scored from live signals).
+
+There's a `suite` CLI (`suite status | scorecard | report | verify | demo`) and a copyable **[reference governed agent](examples/governed_agent.py)** that *cannot act except through the path*. Full write-up: **[docs/CAPSTONE.md](docs/CAPSTONE.md)**.
+
 ## Demos
 
-Five runnable, fully offline scenarios in **[`demos/`](demos/)**, each aimed at a different audience and exercising the **real APIs** of the suite tools. Each resolves the packages from your environment or from sibling source checkouts, skips any tool it can't find rather than crashing, and exits `0`. See **[docs/DEMOS.md](docs/DEMOS.md)** for the full write-up and the SENTINEL rules each one leans on.
+Eight runnable, fully offline scenarios in **[`demos/`](demos/)**, each aimed at a different audience and exercising the **real APIs** of the suite tools. Each resolves the packages from your environment or from sibling source checkouts, skips any tool it can't find rather than crashing, and exits `0`. Scenarios 1–5 show the tools composing by hand; 6–8 exercise the capstone layer. See **[docs/DEMOS.md](docs/DEMOS.md)** for the full write-up and the SENTINEL rules each one leans on.
 
 ```bash
-python demos/run_all.py                       # all five, end to end
+python demos/run_all.py                       # all eight, end to end
 python demos/01_end_to_end_accountability.py  # or just one  (PYTHONUTF8=1 on Windows)
 ```
 
@@ -78,6 +104,9 @@ python demos/01_end_to_end_accountability.py  # or just one  (PYTHONUTF8=1 on Wi
 | 3 | [Compliance evidence](demos/03_compliance_evidence.py) | Compliance / audit | m-of-n approvals clear a gated action (S3); key rotation with continuity proof; one file an auditor verifies offline |
 | 4 | [Governed git access](demos/04_governed_git_access.py) | Platform engineering | RFC 8628 device-flow grant, then branch-protection enforcement on the scoped token |
 | 5 | [Inspectable agent loop](demos/05_inspectable_agent_loop.py) | AI agent builders | a cyclework refine loop with a full trace + a grounded, audited codegraph read |
+| 6 | [Orchestrated path](demos/06_orchestrated_path.py) | Platform / AppSec | the whole path (decide → sign → scope → ground) collapsed into one `Orchestrator.act()` call |
+| 7 | [Unified compliance report](demos/07_unified_compliance_report.py) | Compliance / audit | all five tools aggregated into one Markdown / HTML / SARIF report + a maturity scorecard |
+| 8 | [Suite verify integrity](demos/08_suite_verify_integrity.py) | Auditor / IR | one integrity verdict across every artifact; offline bundle check catches and locates a tamper |
 
 For how the components fit together, see **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 

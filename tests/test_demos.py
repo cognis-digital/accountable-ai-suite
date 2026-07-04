@@ -22,6 +22,9 @@ DEMO_MODULES = [
     "03_compliance_evidence",
     "04_governed_git_access",
     "05_inspectable_agent_loop",
+    "06_orchestrated_path",
+    "07_unified_compliance_report",
+    "08_suite_verify_integrity",
 ]
 
 
@@ -46,6 +49,18 @@ def test_demo_runs_and_exits_clean(name, capsys):
     mod.main()  # must not raise; demos skip missing tools rather than crashing
     out = capsys.readouterr().out
     assert "=" * 10 in out  # the rule() banner was printed
+
+
+def test_governed_agent_example_runs():
+    """examples/governed_agent.py runs end to end (skips missing tools)."""
+    import _common  # noqa: F401  (side effect: puts siblings on sys.path)
+    if not _have("agentledger"):
+        pytest.skip("agentledger not resolvable in this environment")
+    path = os.path.join(REPO_ROOT, "examples", "governed_agent.py")
+    spec = importlib.util.spec_from_file_location("governed_agent", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.main()  # prints and returns; raises if the accountable path breaks
 
 
 def test_integration_example_runs():

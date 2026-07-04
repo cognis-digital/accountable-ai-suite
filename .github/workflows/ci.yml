@@ -13,16 +13,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install the capstone package
+        run: pip install -e .
       - name: Install suite packages from source
         run: |
           pip install "sentinel-policy @ git+https://github.com/cognis-digital/sentinel-policy"
           pip install "agentledger[ed25519] @ git+https://github.com/cognis-digital/agentledger"
           pip install "repo-warden @ git+https://github.com/cognis-digital/repo-warden"
+          pip install "codegraph-mcp @ git+https://github.com/cognis-digital/codegraph-mcp"
           pip install "cyclework @ git+https://github.com/cognis-digital/cyclework"
           pip install pytest
       - name: Run end-to-end integration
         run: python examples/integration.py
+      - name: Run the capstone reference governed agent
+        run: python examples/governed_agent.py
       - name: Run demos
         run: python demos/run_all.py
+      - name: Exercise the suite CLI
+        run: |
+          suite status
+          suite scorecard
+          suite verify
       - name: Run tests
         run: python -m pytest -q
