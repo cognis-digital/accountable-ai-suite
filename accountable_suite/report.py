@@ -177,7 +177,6 @@ class ComplianceReport:
 
     # ---- HTML -------------------------------------------------------------
     def to_html(self) -> str:
-        md_as_dict = self.as_dict()
         sc = self.scorecard
         e = _html.escape
 
