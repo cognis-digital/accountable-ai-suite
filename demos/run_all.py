@@ -19,6 +19,9 @@ SCENARIOS = [
     "03_compliance_evidence",
     "04_governed_git_access",
     "05_inspectable_agent_loop",
+    "06_orchestrated_path",
+    "07_unified_compliance_report",
+    "08_suite_verify_integrity",
 ]
 
 

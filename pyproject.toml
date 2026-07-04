@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "accountable-ai-suite"
+version = "0.1.0"
+description = "Capstone layer over the Accountable AI Engineering suite: end-to-end orchestrator, unified compliance report, cross-tool integrity verify, and a governance maturity scorecard."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "COCL" }
+authors = [{ name = "Cognis Digital" }]
+keywords = ["ai-governance", "audit", "compliance", "agents", "accountability"]
+
+# The capstone is dependency-light and stdlib-only. The five suite tools it
+# orchestrates are optional extras: install any subset, and every capability
+# degrades gracefully for the ones you skip. This keeps the umbrella installable
+# even in environments that only need a couple of the pieces.
+dependencies = []
+
+[project.optional-dependencies]
+sentinel = ["sentinel-policy @ git+https://github.com/cognis-digital/sentinel-policy"]
+ledger = ["agentledger[ed25519] @ git+https://github.com/cognis-digital/agentledger"]
+warden = ["repo-warden @ git+https://github.com/cognis-digital/repo-warden"]
+cyclework = ["cyclework @ git+https://github.com/cognis-digital/cyclework"]
+governance = [
+    "sentinel-policy @ git+https://github.com/cognis-digital/sentinel-policy",
+    "agentledger[ed25519] @ git+https://github.com/cognis-digital/agentledger",
+    "repo-warden @ git+https://github.com/cognis-digital/repo-warden",
+    "cyclework @ git+https://github.com/cognis-digital/cyclework",
+]
+dev = ["pytest"]
+
+[project.scripts]
+suite = "accountable_suite.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/cognis-digital/accountable-ai-suite"
+
+[tool.setuptools]
+packages = ["accountable_suite"]

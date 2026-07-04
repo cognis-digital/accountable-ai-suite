@@ -6,9 +6,12 @@ testable on its own — that **compose into one accountable path** from an
 operator's intent to an agent's action against your code, with a tamper-evident
 record of all of it.
 
-This repo is the umbrella: the story that ties the five together, plus a
-runnable end-to-end example ([`examples/integration.py`](../examples/integration.py))
-and a set of audience-targeted demos ([`demos/`](../demos/)).
+This repo is the umbrella: the story that ties the five together, a runnable
+end-to-end example ([`examples/integration.py`](../examples/integration.py)), a
+set of audience-targeted demos ([`demos/`](../demos/)), and a **capstone package**
+([`accountable_suite`](../accountable_suite/)) that makes the umbrella
+executable — an orchestrator, a unified compliance report, a one-shot integrity
+verify, and a maturity scorecard. See [CAPSTONE.md](CAPSTONE.md).
 
 ## How the pieces compose
 
@@ -81,6 +84,43 @@ The propose → check → revise loop made first-class. You supply a `check`
 `Engine` runs the cycle, detects convergence and plateaus, enforces a budget,
 and returns a full **trace** of every iteration. It replaces the agent's
 opaque `while` with something you can audit step by step.
+
+## The capstone layer
+
+Composing five tools by hand is instructive but not what you want in production.
+The `accountable_suite` package collapses the path into one call and adds the
+cross-tool views that only make sense over all of them at once:
+
+```mermaid
+flowchart TB
+    subgraph ORCH[accountable_suite.Orchestrator.act]
+      direction LR
+      P[sentinel-policy<br/>decide] --> L[agentledger<br/>sign + chain] --> W[repo-warden<br/>scope git op]
+      G[codegraph-mcp<br/>ground] -.-> L
+    end
+    ORCH --> OUT[typed Outcome]
+    ORCH --> EV([evidence bundle])
+    L --> REP[build_report<br/>MD / HTML / SARIF]
+    W --> REP
+    P --> REP
+    G --> REP
+    REP --> SC[maturity scorecard]
+    EV --> V[verify_all<br/>one integrity verdict]
+    W --> V
+    G --> V
+```
+
+- **`Orchestrator`** — `act()` = decide → sign → scope → (ground); returns a
+  typed `Outcome`, exports an offline-verifiable bundle.
+- **`build_report`** — one Markdown/HTML/SARIF/JSON document aggregating every
+  tool; doctrine gaps and denied authorizations become SARIF findings.
+- **`verify_all`** — one integrity verdict across the evidence bundle, warden
+  audit, and graph audit; the bundle path is pure-Python and offline.
+- **`build_scorecard`** — five SENTINEL-aligned dimensions, scored from live
+  signals, mapped to a maturity level.
+
+Every capability degrades gracefully when a tool is absent — the same code runs
+in CI (four tools) and on a full local checkout (five).
 
 ## Why these boundaries
 
