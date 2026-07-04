@@ -20,7 +20,7 @@ import json
 import sys
 
 from . import build_report, build_scorecard, verify_all
-from . import resolve
+from . import compat, resolve
 from .verify import verify_evidence_bundle, verify_warden_jsonl, VerifyReport
 
 
@@ -63,14 +63,20 @@ def _reference_scenario():
         recorder.submit("mallory", "exfiltrate", {"to": "external"})  # denied (S6)
 
     if av.has("repo_warden"):
-        from repo_warden import Action, AuditLog, Store, Warden
+        import repo_warden as rw
+        from repo_warden import Action, Store, Warden
         ws = Store()
-        warden_audit = AuditLog(ws)
-        warden = Warden(ws, audit=warden_audit)
+        if compat.warden_supports_audit(rw):
+            warden_audit = rw.AuditLog(ws)
+            warden = compat.make_warden(Warden, ws, audit=warden_audit)
+        else:
+            warden = Warden(ws)  # older release: no audit sink available
         token, _ = ws.issue_token("agent:dev", {"branch:push"}, "acme/*")
-        warden.authorize(token, Action("push", "acme/api", "feature/x"))  # allow
-        warden.authorize(token, Action("push", "acme/api", "main"))       # deny
-        warden.authorize(token, Action("push", "other/secret", "x"))      # deny
+        for br in ("feature/x", "main"):                 # allow, then deny
+            warden.authorize(token, compat.make_action(
+                Action, op="push", repo="acme/api", branch=br))
+        warden.authorize(token, compat.make_action(       # namespace deny
+            Action, op="push", repo="other/secret", branch="x"))
 
     if av.has("codegraph"):
         from .orchestrator import _sample_graph_store
@@ -160,19 +166,20 @@ def _cmd_demo(args) -> int:
             ],
         })
     warden_store = None
+    warden_audit = None
     token = None
     if av.has("repo_warden"):
-        from repo_warden import AuditLog, Store
+        import repo_warden as rw
+        from repo_warden import Store
         warden_store = Store()
-        warden_audit = AuditLog(warden_store)
+        if compat.warden_supports_audit(rw):
+            warden_audit = rw.AuditLog(warden_store)
         token, _ = warden_store.issue_token("agent:dev", {"branch:push"}, "acme/*")
-    else:
-        warden_audit = None
 
     graph_store = _sample_graph_store() if av.has("codegraph") else None
     orch = Orchestrator(policy=policy, warden_store=warden_store,
                         graph_store=graph_store)
-    if warden_store is not None:
+    if warden_store is not None and warden_audit is not None:
         orch.warden.audit = warden_audit  # capture events for the report
 
     print("Reference governed-agent run (single suite.act() calls):\n")

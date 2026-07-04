@@ -34,6 +34,19 @@ needs_warden = pytest.mark.skipif(not _have("repo_warden"),
                                   reason="repo-warden not resolvable")
 
 
+def _warden_has_audit():
+    if not _have("repo_warden"):
+        return False
+    import repo_warden as rw
+    from accountable_suite import compat
+    return compat.warden_supports_audit(rw)
+
+
+needs_warden_audit = pytest.mark.skipif(
+    not _warden_has_audit(),
+    reason="installed repo-warden lacks the AuditLog / JSONL export surface")
+
+
 # ---- resolution ----------------------------------------------------------
 def test_availability_reports_all_five():
     av = resolve.availability()
@@ -195,14 +208,17 @@ def test_report_flags_doctrine_gaps_as_findings():
 
 
 @needs_ledger
-@needs_warden
+@needs_warden_audit
 def test_report_surfaces_denied_authorizations():
-    from repo_warden import Action, AuditLog, Store, Warden
+    import repo_warden as rw
+    from repo_warden import Action, Store, Warden
+    from accountable_suite import compat
     ws = Store()
-    audit = AuditLog(ws)
-    warden = Warden(ws, audit=audit)
+    audit = rw.AuditLog(ws)
+    warden = compat.make_warden(Warden, ws, audit=audit)
     tok, _ = ws.issue_token("agent", {"branch:push"}, "acme/*")
-    warden.authorize(tok, Action("push", "acme/api", "main"))  # denied
+    warden.authorize(tok, compat.make_action(
+        Action, op="push", repo="acme/api", branch="main"))  # denied
     rpt = build_report(warden_audit=audit)
     assert rpt.warden_section["denied"] == 1
     assert any(f.properties.get("kind") == "denied_authorization"
@@ -286,16 +302,19 @@ def test_verify_warden_jsonl_non_json_line_degrades():
     assert res.ok is False and "not valid JSON" in res.detail
 
 
-@needs_warden
+@needs_warden_audit
 def test_verify_warden_jsonl_roundtrip_and_tamper():
-    from repo_warden import Action, AuditLog, Store, Warden, to_jsonl
+    import repo_warden as rw
+    from repo_warden import Action, Store, Warden
+    from accountable_suite import compat
     ws = Store()
-    audit = AuditLog(ws)
-    warden = Warden(ws, audit=audit)
+    audit = rw.AuditLog(ws)
+    warden = compat.make_warden(Warden, ws, audit=audit)
     tok, _ = ws.issue_token("agent", {"branch:push"}, "acme/*")
-    warden.authorize(tok, Action("push", "acme/api", "feature/x"))
-    warden.authorize(tok, Action("push", "acme/api", "main"))
-    jsonl = to_jsonl(audit.events())
+    for br in ("feature/x", "main"):
+        warden.authorize(tok, compat.make_action(
+            Action, op="push", repo="acme/api", branch=br))
+    jsonl = rw.to_jsonl(audit.events())
     good = verify_warden_jsonl(jsonl.splitlines())
     assert good.ok and good.checked == 2
 

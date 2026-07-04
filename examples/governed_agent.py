@@ -28,7 +28,7 @@ import sys
 # make the capstone package importable when run straight from the repo
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from accountable_suite import Orchestrator, build_report, resolve  # noqa: E402
+from accountable_suite import Orchestrator, build_report, compat, resolve  # noqa: E402
 from accountable_suite.orchestrator import _sample_graph_store  # noqa: E402
 
 
@@ -82,9 +82,11 @@ def build_agent():
     warden_audit = None
     token = None
     if av.has("repo_warden"):
-        from repo_warden import AuditLog, Store
+        import repo_warden as rw
+        from repo_warden import Store
         warden_store = Store()
-        warden_audit = AuditLog(warden_store)
+        if compat.warden_supports_audit(rw):
+            warden_audit = rw.AuditLog(warden_store)
         token, _ = warden_store.issue_token("agent:code-fix",
                                             {"branch:push"}, "acme/*")
 
@@ -92,7 +94,7 @@ def build_agent():
 
     orch = Orchestrator(policy=policy, warden_store=warden_store,
                         graph_store=graph_store)
-    if warden_store is not None:
+    if warden_store is not None and warden_audit is not None:
         orch.warden.audit = warden_audit  # so the report can see the events
 
     agent = GovernedAgent(orch, identity="agent:code-fix", token=token)

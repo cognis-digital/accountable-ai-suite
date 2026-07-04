@@ -29,7 +29,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from . import resolve
+from . import compat, resolve
 from .scorecard import Scorecard, build_scorecard
 
 SARIF_VERSION = "2.1.0"
@@ -333,7 +333,7 @@ def build_report(*, title: str = "AI Governance Compliance Report",
     # ---- policy ----------------------------------------------------------
     policy_section = None
     if policy is not None:
-        cov = policy.doctrine_coverage()
+        cov = compat.doctrine_coverage(policy)
         problems = policy.validate()
         try:
             from sentinel_policy import build_report as _sp_report

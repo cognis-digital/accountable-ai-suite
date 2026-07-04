@@ -23,7 +23,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from . import resolve
+from . import compat, resolve
 
 LEVELS = [
     (0, "Absent"),
@@ -117,7 +117,7 @@ def build_scorecard(*, policy: Any = None, ledger_verifies: Optional[bool] = Non
         sig.append("engine present but no policy supplied to score")
     else:
         problems = policy.validate()
-        cov = policy.doctrine_coverage()
+        cov = compat.doctrine_coverage(policy)
         covered, total = len(cov["covered"]), 7
         cov_pct = 100.0 * covered / total
         valid_bonus = 40.0 if not problems else 0.0

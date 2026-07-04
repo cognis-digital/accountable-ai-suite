@@ -38,12 +38,16 @@ def main() -> None:
 
     warden_audit = None
     if av.has("repo_warden"):
-        from repo_warden import Action, AuditLog, Store, Warden
-        ws = Store()
-        warden_audit = AuditLog(ws)
-        warden = Warden(ws, audit=warden_audit)
-        tok, _ = ws.issue_token("agent:dev", {"branch:push"}, "acme/*")
-        warden.authorize(tok, Action("push", "acme/api", "feature/x"))
+        import repo_warden as rw
+        from repo_warden import Action, Store, Warden
+        from accountable_suite import compat
+        if compat.warden_supports_audit(rw):
+            ws = Store()
+            warden_audit = rw.AuditLog(ws)
+            warden = compat.make_warden(Warden, ws, audit=warden_audit)
+            tok, _ = ws.issue_token("agent:dev", {"branch:push"}, "acme/*")
+            warden.authorize(tok, compat.make_action(
+                Action, op="push", repo="acme/api", branch="feature/x"))
 
     graph_store = _sample_graph_store() if av.has("codegraph") else None
 

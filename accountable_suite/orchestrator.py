@@ -39,7 +39,7 @@ import tempfile
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from . import resolve
+from . import compat, resolve
 
 # git operations the orchestrator knows how to scope through repo-warden
 _GIT_OPS = {"push", "read", "delete"}
@@ -135,10 +135,8 @@ class Orchestrator:
         self.warden_store = warden_store
         if warden_store is not None and av.has("repo_warden"):
             from repo_warden import Warden
-            kwargs = {}
-            if branch_policy is not None:
-                kwargs["policy"] = branch_policy
-            self.warden = Warden(warden_store, **kwargs)
+            self.warden = compat.make_warden(Warden, warden_store,
+                                             policy=branch_policy)
 
         self.graph_store = graph_store if av.has("codegraph") else None
 
@@ -226,9 +224,8 @@ class Orchestrator:
             notes.append("no token presented for a git op; warden denies (S1)")
             return False, "auth", "no token presented"
         from repo_warden import Action
-        act = Action(
-            op=action,
-            repo=params.get("repo", ""),
+        act = compat.make_action(
+            Action, op=action, repo=params.get("repo", ""),
             branch=params.get("branch"),
             force=bool(params.get("force", False)),
             paths=tuple(params.get("paths", ()) or ()),
